@@ -36,7 +36,8 @@ white and black tiles were created in inkscape
 BOARD_WIDTH = 8*TILE_WIDTH
 BOARD_HEIGHT = BOARD_WIDTH
 DATA_DIR = "chess_data"
-TILES = {"black_tile":"black_tile.gif",
+TILES = {
+    "black_tile":"black_tile.gif",
     "B":"chess_b451.gif",
     "b":"chess_b45.gif",
     "k":"chess_k45.gif",
@@ -240,12 +241,12 @@ class Controller(object):
         so, whenever there are an even number of clicks, use the most recent to two to perform a move
         then update the display
         '''
-        j = event.x/TILE_WIDTH
+        j = event.x // TILE_WIDTH
         #  the / operator is called integer division
         # it returns the number of times TILE_WIDTH goes into event.x ignoring any remainder
         # eg: 2/2 = 1, 3/2 = 1, 11/5 = 2 and so on
         # so, it should return a number between 0 (if x < TILE_WIDTH) though to 7
-        i = event.y/TILE_WIDTH
+        i = event.y // TILE_WIDTH
 
         self.clickList.append(BoardLocation(i, j))
         # just maintain a list of all of the moves
