@@ -38,20 +38,142 @@ BOARD_HEIGHT = BOARD_WIDTH
 DATA_DIR = "chess_data"
 TILES = {
     "black_tile":"black_tile.gif",
-    "B":"chess_b451.gif",
-    "b":"chess_b45.gif",
-    "k":"chess_k45.gif",
-    "K":"chess_k451.gif",
-    "n":"chess_n45.gif",
-    "N":"chess_n451.gif",
-    "p":"chess_p45.gif",
-    "P":"chess_p451.gif",
-    "q":"chess_q45.gif",
-    "Q":"chess_q451.gif",
-    "r":"chess_r45.gif",
-    "R":"chess_r451.gif",
+    "Bishop.White":"chess_b451.gif",
+    "Bishop.Black":"chess_b45.gif",
+    "King.White":"chess_k451.gif",
+    "King.Black":"chess_k45.gif",
+    "Knight.White":"chess_n451.gif",
+    "Knight.Black":"chess_n45.gif",
+    "Pawn.White":"chess_p451.gif",
+    "Pawn.Black":"chess_p45.gif",
+    "Queen.White":"chess_q451.gif",
+    "Queen.Black":"chess_q45.gif",
+    "Rook.White":"chess_r451.gif",
+    "Rook.Black":"chess_r45.gif",
     "white_tile":"white_tile.gif"
     }
+
+
+from enum import Enum
+class Color(Enum):
+    UNDEFINED = -1
+    BLACK     = 0
+    WHITE     = 1
+
+class Location:
+    def __init__(self, x = None, y = None):
+        self.y = x
+        self.x = y
+
+    def __str__(self):
+        return "(" + str(self.x) + ", " + str(self.y) + ")"
+
+    __repr__ = __str__
+
+class Piece:
+    def __init__(self, color, x, y):
+        self.m_color = color
+        self.m_location = Location(x, y)
+
+    @property
+    def color(self):
+        return self.m_color
+
+    @color.setter
+    def color(self, c):
+        self.m_color = c
+
+    @property
+    def location(self):
+        return self.m_location
+
+    @location.setter
+    def location(self, x, y):
+        self.m_location = Location(x, y)
+
+    def get_tile(self, piece_str):
+        color = str(self.m_color).split(".")[1]
+        color = color[0] + color[1:].lower()
+        return piece_str + "." + str(color)
+
+    def render(self):
+        raise Exception("Render not implemented")
+
+    def valid_move(self, dst_x, dst_y):
+        raise Exception("moves not implemented")
+
+class Pawn(Piece):
+    # Everything will be represented in bits
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "Pawn"
+        return self.get_tile(piece_str)
+
+    def valid_move(self, dst_x, dst_y):
+        loc = self.m_location
+        if self.m_color == Color.WHITE:
+            if abs(dst_x - loc.x) == 1 and loc.y - dst_y == 1 and self.m_board[dst_y][dst_x].color == Color.BLACK:
+                return True
+
+            elif abs(dst_x - loc.x) == 0 and loc.y - dst_y >= 1 and loc.y - dst_y <= 2 and self.m_board[dst_y][dst_x] == EMPTY_SQUARE:
+                return True
+
+        elif self.m_color == Color.BLACK:
+            if abs(dst_x - loc.x) == 1 and loc.y - dst_y == -1 and self.m_board[dst_y][dst_x].color == Color.WHITE:
+                return True
+
+            elif abs(dst_x - loc.x) == 0 and loc.y - dst_y >= 1 and loc.y - dst_y <= 2 and self.m_board[dst_y][dst_x] == EMPTY_SQUARE:
+                return True
+
+
+class Queen(Piece):
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "Queen"
+        return self.get_tile(piece_str)
+
+class King(Piece):
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "King"
+        return self.get_tile(piece_str)
+
+class Rook(Piece):
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "Rook"
+        return self.get_tile(piece_str)
+
+class Bishop(Piece):
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "Bishop"
+        return self.get_tile(piece_str)
+
+class Knight(Piece):
+    def __init__(self, board, color, x, y):
+        Piece.__init__(self, color, x, y)
+
+    @property
+    def tile(self):
+        piece_str = "Knight"
+        return self.get_tile(piece_str)
+
 
 class Model(object):
     def __init__(self):
@@ -59,19 +181,49 @@ class Model(object):
         row ordering is reversed from normal chess representations
         but corresponds to a top left screen coordinate
         '''
-
         self.board = []
-        pawn_base = "P "*8
-        white_pieces =  "R N B Q K B N R"
-        white_pawns = pawn_base.strip()
-        black_pieces = white_pieces.lower()
-        black_pawns = white_pawns.lower()
-        self.board.append(black_pieces.split(" "))
-        self.board.append(black_pawns.split(" "))
+
+        white_pieces = [Rook(self.board, Color.WHITE, 0, 0),
+                        Knight(self.board, Color.WHITE, 1, 0),
+                        Bishop(self.board, Color.WHITE, 2, 0),
+                        Queen(self.board, Color.WHITE, 3, 0),
+                        King(self.board, Color.WHITE, 4, 0),
+                        Bishop(self.board, Color.WHITE, 5, 0),
+                        Knight(self.board, Color.WHITE, 6, 0),
+                        Rook(self.board, Color.WHITE, 7, 0)]
+
+        white_pawns = [Pawn(self.board, Color.WHITE, i, 0) for i in range(0, 8)]
+
+        black_pieces = [Rook(self.board, Color.BLACK, 0, 0),
+                        Knight(self.board, Color.BLACK, 1, 0),
+                        Bishop(self.board, Color.BLACK, 2, 0),
+                        Queen(self.board, Color.BLACK, 3, 0),
+                        King(self.board, Color.BLACK, 4, 0),
+                        Bishop(self.board, Color.BLACK, 5, 0),
+                        Knight(self.board, Color.BLACK, 6, 0),
+                        Rook(self.board, Color.BLACK, 7, 0)]
+
+        black_pawns = [Pawn(self.board, Color.BLACK, i, 0) for i in range(0, 8)]
+
+        self.board.append(black_pieces)
+        self.board.append(black_pawns)
+
         for i in range(4):
             self.board.append([EMPTY_SQUARE]*8)
-        self.board.append(white_pawns.split(" "))
-        self.board.append(white_pieces.split(" "))
+
+        self.board.append(white_pawns)
+        self.board.append(white_pieces)
+
+    def validate_move(self, start, destination):
+        start.i = int(start.i)
+        start.j = int(start.j)
+        destination.i = int(destination.i)
+        destination.j = int(destination.j)
+
+        if self.board[start.i][start.j] == EMPTY_SQUARE:
+            return
+
+        piece = self.board[start.i][start.j]
 
 
     def move(self, start,  destination):
@@ -141,9 +293,10 @@ class View(Frame):
             remainder = 1
         else:
             remainder = 0
+
         for i in range(8):
             x = i*TILE_WIDTH
-            if i%2 == remainder:
+            if i % 2 == remainder:
                 # i %2 is the remainder after dividing i by 2
                 # so i%2 will always be either 0 (no remainder- even numbers) or
                 # 1 (remainder 1 - odd numbers)
@@ -186,7 +339,7 @@ class View(Frame):
             for j,  piece in enumerate(row):
                 if piece == EMPTY_SQUARE:
                     continue  # skip empty tiles
-                tile = self.images[piece]
+                tile = self.images[piece.tile]
                 x = j*TILE_WIDTH
                 y = i*TILE_WIDTH
                 self.canvas.create_image(x, y, anchor=NW,  image = tile)
@@ -253,7 +406,7 @@ class Controller(object):
         # this list shouldn't be used to replay a series of moves because that is something
         # which should be stored in the model - but it wouldn't be much trouble to
         # keep a record of moves in the model.
-        if len(self.clickList)%2 ==0:
+        if len(self.clickList) % 2 ==0:
             # move complete, execute the move
             self.m.move(self.clickList[-2], self.clickList[-1])
             # use the second last entry in the clickList and the last entry in the clickList
